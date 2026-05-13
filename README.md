@@ -32,35 +32,34 @@ Geneformer wins because it forces engagement with BioNeMo specifically AND lever
 
 Ship, in 10–14 days of focused work:
 
-1. A public GitHub repo with a clean, reproducible fine-tuning pipeline for Geneformer on a chosen biological task.
-2. A blog post (Medium or LinkedIn) walking through the project — "Fine-tuning Geneformer with NVIDIA BioNeMo for [task]". The blog post is the differentiator: NVIDIA Solutions Architects communicate constantly (whitepapers, hackathons, demos).
+1. A public GitHub repo with a clean, **pipeline-first** Geneformer fine-tuning framework applied to **three drug-discovery-relevant indications** (cardio, immuno, onco). One pipeline, three configs, three result sets — the reusable methodology is the deliverable, not a single benchmark.
+2. A blog post (LinkedIn primary + Medium cross-post) walking through the project — *"Fine-tuning Geneformer with NVIDIA BioNeMo for target identification across three drug-discovery indications"*. The blog post is the differentiator: NVIDIA Solutions Architects communicate constantly (whitepapers, hackathons, demos).
 3. Bonus if time allows: inference deployment via Triton Inference Server, with a latency/throughput benchmark.
 
-The goal is **not** scientific novelty. It is a credible, well-documented technical demonstration that can be linked from the CV / LinkedIn / cover letter.
+The goal is **not** scientific novelty. It is a credible, well-documented technical demonstration that can be linked from the CV / LinkedIn / cover letter — and that signals "I built something a customer could adopt".
 
 ## Technical scope
 
-### Dataset (to be decided)
+### Diseases
 
-Options to evaluate:
-- **CELLxGENE Discover** — curated public scRNA-seq datasets, easy to filter.
-- A **cancer scRNA-seq** dataset (e.g., pan-cancer atlas subset) — strong narrative for drug discovery audience.
-- A **disease vs control** scRNA-seq dataset — clean binary classification task, easy to benchmark.
-- Something **microbiome / immuno-related** if a suitable scRNA-seq dataset exists — capitalizes on Enterome experience.
+Three indications, all sourced from CELLxGENE Discover (BioNeMo's `bionemo-geneformer` package depends on `cellxgene_census` — supported path).
 
-Decision criteria:
-- Dataset size manageable for fine-tuning on a single A100 (<= ~100k cells ideal)
-- Public, well-annotated labels
-- A baseline non-foundation method exists in the literature for comparison
+| Disease | Dataset | Cells | Why |
+|---|---|---|---|
+| **Dilated cardiomyopathy (DCM)** | Chaffin et al. 2022 (Nature) | ~600k | The Geneformer paper benchmark (Theodoris 2023). Published target list lets us validate the in silico perturbation methodology against ground truth. Ship-safe anchor. |
+| **Ulcerative colitis (UC)** | Smillie et al. 2019 (Cell) | ~365k | Immuno indication aligned with Enterome background. Active drug development (JAK, anti-IL23). |
+| **Lung adenocarcinoma (LUAD)** | Kim et al. 2020 | ~200k | Oncology — top pharma R&D area, also Enterome-aligned. |
 
 ### Task
 
-Pick the **simplest task that demonstrates fine-tuning value**:
-- Cell type classification (multi-class)
-- Disease state classification (binary)
-- Perturbation response prediction (more ambitious)
+**Target identification via in silico perturbation** — the Geneformer paper's flagship use case applied at scale across three indications:
 
-Start with cell type classification on a labeled dataset. Move to disease state if time permits.
+1. Fine-tune Geneformer on disease-vs-healthy binary classification per indication.
+2. Perturb gene embeddings (gene by gene) and rank candidates by their effect on shifting the disease cell state toward healthy.
+3. Validate the ranked list against known drug targets in **OpenTargets** / **DGIdb** for the disease. Metric: enrichment of known targets in top-K vs random.
+4. Compare across the 3 indications — does the same methodology generalize? Where does it fail?
+
+Parked for follow-up (see `FUTURE_PROJECTS.md`): responder prediction, Perturb-seq response, resistance.
 
 ### Pipeline
 
@@ -96,42 +95,49 @@ Start with cell type classification on a labeled dataset. Move to disease state 
 
 ## Compute
 
-Geneformer fine-tuning requires more VRAM than the candidate's RTX 4070 Super (12GB). Options:
+Two-tier compute matching what an SA would recommend to a customer: consumer GPU for pipeline validation, A100 for production.
 
-- **Local dev** on RTX 4070 Super (remote access via `ssh gpu`) — use a small subset for pipeline validation
-- **Final runs on rented A100**:
-  - Lambda Labs, RunPod, or Vast.ai — A100 40GB at ~$1–2 / hour
-  - Budget envelope: ~$50–100 for the full project
-- **Free credit alternatives**: NVIDIA Launchpad (free trial), Google Colab Pro+ with A100 (~$50/month)
+| | Local dev | Production runs |
+|---|---|---|
+| Hardware | RTX 4070 SUPER (12 GB) — pipeline validation, smoke tests | **Lambda Labs A100 40 GB** (~$1.10/h) |
+| Access | `ssh gpu` over Tailscale to WSL2 host | Direct SSH from Mac |
+| Workload | Tokenization sanity, 1-epoch smoke run, in silico perturbation testing | 3 full fine-tuning runs, in silico perturbation production sweep |
 
-Recommended: develop locally on the 4070 Super with a tiny dataset slice; do the final training + eval runs on a rented A100.
+Budget envelope: **$50-100**. Realistic A100 expectation: 10-20 h × $1.10 ≈ $11-22 across the three diseases. See `docs/SETUP.md` for the full Day 1-2 procedure.
 
 ## Timeline (10–14 days, focused)
 
-| Day | Milestone |
-|-----|-----------|
-| 1–2 | Environment setup, BioNeMo install, Geneformer checkpoint loading, GPU access confirmed |
-| 3   | Dataset chosen and downloaded; preprocessing pipeline drafted |
-| 4–5 | Tokenization + data loaders working end-to-end on a tiny subset |
-| 6–9 | Fine-tuning runs; iterate on hyperparameters; full-dataset training on A100 |
-| 10–11 | Evaluation, baseline comparison, figures |
-| 12–13 | Write-up: README + blog post draft |
-| 14  | Polish, publish blog post, link from LinkedIn / CV |
+| Day | Milestone | Status |
+|---|---|---|
+| 1–2 | WSL2 + Docker + NVIDIA Container Toolkit; NGC login; BioNeMo 2.7.1 pull; Geneformer 10M smoke test on RTX 4070 SUPER | ✅ done 2026-05-13 |
+| 3 | Source DCM/UC/LUAD scRNA-seq from CELLxGENE Census; data download script | |
+| 4–5 | Parameterized data prep pipeline (QC + Geneformer tokenization + SCDL conversion); same code, 3 configs | |
+| 6 | Smoke fine-tuning runs on RTX 4070 SUPER (1 epoch, subset) to validate the training loop | |
+| 7–8 | Production fine-tuning on Lambda Labs A100 — 3 disease classifiers | |
+| 9 | In silico perturbation analysis (gene embedding perturbation, candidate target ranking) | |
+| 10 | OpenTargets / DGIdb validation — enrichment of known targets in top-K vs random | |
+| 11 | Cross-disease comparison figures, classifier metrics table, baseline LogReg/MLP comparison | |
+| 12–13 | Blog post draft (LinkedIn + Medium) — narrative around methodology generalizability | |
+| 14 | Polish, publish, link from LinkedIn / CV / cover letter | |
 
-## Open decisions (to make in next session)
+## Decisions locked
 
-1. **Final dataset choice** — cancer scRNA-seq vs disease-state vs immune/microbiome. Pick one and stick to it.
-2. **Final task** — cell type classification (safer) vs disease state (better narrative).
-3. **BioNeMo install path** — NGC container (closer to NVIDIA's production setup, more impressive) vs pip install (faster to iterate).
-4. **GPU rental provider** — Lambda Labs vs RunPod vs Vast.ai. Lambda Labs tends to be the cleanest.
-5. **Blog post target** — Medium (broader reach) vs LinkedIn article (better signal to NVIDIA recruiters specifically). Could do both.
+| Question | Choice | Date |
+|---|---|---|
+| Biological problem | **A — Target ID via in silico perturbation** (Geneformer flagship use case) | 2026-05-12 |
+| Diseases | **DCM + UC + LUAD** (cardio + immuno + onco) — pipeline-first, three configs | 2026-05-13 |
+| Task | Disease-vs-healthy binary classification + gene-embedding perturbation ranking | 2026-05-13 |
+| BioNeMo install | **NGC container** `nvcr.io/nvidia/clara/bionemo-framework:2.7.1` (pinned) | 2026-05-12 |
+| GPU rental | **Lambda Labs A100 40GB** (~$1.10/h) | 2026-05-12 |
+| Blog target | **LinkedIn primary + Medium cross-post** | 2026-05-12 |
 
 ## Success criteria
 
-- Repo is public, well-documented, reproducible from scratch
+- Repo is public, well-documented, reproducible from scratch (one pipeline, three configs, three result sets)
 - Blog post is published before the NVIDIA application is submitted
 - Application cover letter and LinkedIn explicitly reference the project
-- Fine-tuned Geneformer beats the non-foundation baseline on the chosen task (even by a small margin)
+- Fine-tuned Geneformer beats a non-foundation baseline (LogReg / MLP on HVG) on at least 2 of the 3 indications
+- In silico perturbation recovers a non-trivial fraction of OpenTargets known drug targets in the top-K predictions, on at least DCM (the paper-anchored baseline)
 - Bonus: a recruiter or hiring manager comments on the blog post
 
 ## Fallback plan
