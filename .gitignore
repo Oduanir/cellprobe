@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+build/
+dist/
+.installed.cfg
+
+# Virtual envs
+.venv/
+venv/
+env/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Data and checkpoints (too large for git)
+data/**
+!data/.gitkeep
+results/**
+!results/.gitkeep
+*.pt
+*.ckpt
+*.nemo
+*.h5ad
+*.h5
+*.tar.gz
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets — NEVER commit
+.ngc/
+*.key
+*.pem
+.env.local
+secrets.yaml
+
+# Logs
+*.log
+lightning_logs/
+wandb/
+mlruns/
