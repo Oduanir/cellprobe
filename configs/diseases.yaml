@@ -1,0 +1,29 @@
+census_version: "latest"
+
+diseases:
+  dcm:
+    name: "Dilated cardiomyopathy"
+    dataset_id: "65badd7a-9262-4fd1-9ce2-eb5dc0ca8039"
+    citation: "Reichart et al. 2022, Science (DOI 10.1126/science.abo1984)"
+    tissue_general: "heart"
+    disease_label: "dilated cardiomyopathy"
+    healthy_label: "normal"
+
+  uc:
+    name: "Ulcerative colitis"
+    dataset_id: "e6aaf5a4-16e9-4ea6-9733-4eafd4e473d3"
+    citation: "Oliver et al. 2024, Nature (DOI 10.1038/s41586-024-07571-1)"
+    note: "Smillie 2019 was the initial pick but its Census deposit contains only normal cells. Oliver 2024 is a more recent IBD atlas with 35,891 UC + 1,077,238 normal cells in the same dataset; healthy class is subsampled at download time to keep classes roughly balanced."
+    tissue_general: "large intestine"
+    disease_label: "ulcerative colitis"
+    healthy_label: "normal"
+    max_healthy_cells: 50000
+    seed: 42
+
+  luad:
+    name: "Lung adenocarcinoma (LuCA core atlas)"
+    dataset_id: "232f6a5a-a04c-4758-a6e8-88ab2e3a6e69"
+    citation: "Salcher et al. 2022, Cancer Cell (DOI 10.1016/j.ccell.2022.10.008)"
+    tissue_general: "lung"
+    disease_label: "lung adenocarcinoma"
+    healthy_label: "normal"

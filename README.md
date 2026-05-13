@@ -42,13 +42,15 @@ The goal is **not** scientific novelty. It is a credible, well-documented techni
 
 ### Diseases
 
-Three indications, all sourced from CELLxGENE Discover (BioNeMo's `bionemo-geneformer` package depends on `cellxgene_census` — supported path).
+Three indications, all sourced from CELLxGENE Census (BioNeMo's `bionemo-geneformer` package depends on `cellxgene_census` — supported path). Final dataset selections after auditing what's actually deposited in the curated Census:
 
-| Disease | Dataset | Cells | Why |
-|---|---|---|---|
-| **Dilated cardiomyopathy (DCM)** | Chaffin et al. 2022 (Nature) | ~600k | The Geneformer paper benchmark (Theodoris 2023). Published target list lets us validate the in silico perturbation methodology against ground truth. Ship-safe anchor. |
-| **Ulcerative colitis (UC)** | Smillie et al. 2019 (Cell) | ~365k | Immuno indication aligned with Enterome background. Active drug development (JAK, anti-IL23). |
-| **Lung adenocarcinoma (LUAD)** | Kim et al. 2020 | ~200k | Oncology — top pharma R&D area, also Enterome-aligned. |
+| Disease | Dataset (CELLxGENE Census) | Cells downloaded | Disease / healthy split | Why |
+|---|---|---|---|---|
+| **Dilated cardiomyopathy (DCM)** | Reichart et al. 2022, *Science* — "DCM/ACM heart cell atlas: All cells" (DOI 10.1126/science.abo1984) | 764,953 | 482,581 / 282,372 | Chaffin 2022 (the Theodoris/Geneformer benchmark) is not in the Census; Reichart 2022 is a richer DCM atlas with healthy controls in the same study. Heart failure has extensive OpenTargets coverage. |
+| **Ulcerative colitis (UC)** | Oliver et al. 2024, *Nature* — "Extended - All genes" (DOI 10.1038/s41586-024-07571-1) | 85,891 (healthy subsampled at download from 1.07M to 50k for class balance) | 35,891 / 50,000 | Smillie 2019 was the initial pick but its Census deposit contains only the healthy subset (no UC cells). Oliver 2024 is a more recent IBD atlas with both classes properly labeled. Immuno indication, Enterome-aligned. |
+| **Lung adenocarcinoma (LUAD)** | Salcher et al. 2022, *Cancer Cell* — "Single-cell lung cancer atlas (LuCA) -- core atlas" (DOI 10.1016/j.ccell.2022.10.008) | 623,816 | 410,927 / 212,889 | LuCA core is a meta-atlas integrating multiple LUAD studies (including Kim 2020) with shared healthy lung controls — better than any single primary study. Oncology, Enterome-aligned. |
+
+Dataset selection script: `src/data/download.py` (parameterized by `configs/diseases.yaml`).
 
 ### Task
 
