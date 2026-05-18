@@ -12,8 +12,10 @@ is shipped by `bionemo-scdl` and not pip-installable standalone in 2.7.1).
 
     python -u -m src.data.scdl_convert --config configs/diseases.yaml --out data/
 
-CELLxGENE Census stores raw counts in `.X` (not `.raw.X`), so we always pass
-`--use-X-not-raw`.
+The BioNeMo 2.7.1 CLI takes `--data-path`, `--save-path` and a few optional
+performance knobs (`--num-workers`, `--use-mp`, `--paginated-load-cutoff`,
+`--load-block-row-size`, `--data-dtype`). It reads `.X` from the AnnData and
+applies Geneformer's rank-based gene tokenization during conversion.
 """
 from __future__ import annotations
 
@@ -43,15 +45,17 @@ def convert_split(disease_key: str, split: str, data_root: Path, force: bool = F
         return {"disease": disease_key, "split": split, "status": "skipped",
                 "out_dir": str(out_dir)}
 
-    if out_dir.exists() and force:
+    # convert_h5ad_to_scdl insists on creating save-path itself — pre-existing
+    # leaf directory (even empty) corrupts its init and triggers a misleading
+    # "version.json missing" FileNotFoundError. Remove it; only ensure parent.
+    if out_dir.exists():
         shutil.rmtree(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_dir.parent.mkdir(parents=True, exist_ok=True)
 
     cmd = [
         "convert_h5ad_to_scdl",
         "--data-path", str(in_dir),
         "--save-path", str(out_dir),
-        "--use-X-not-raw",
     ]
     print(f"[{disease_key}/{split}] running: {' '.join(cmd)}")
     completed = subprocess.run(cmd, capture_output=True, text=True)
