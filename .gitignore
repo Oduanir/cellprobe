@@ -25,6 +25,15 @@ data/**
 !data/.gitkeep
 results/**
 !results/.gitkeep
+# Track the lightweight metric/summary JSONs — they're the project artifacts a
+# reader needs to verify our numbers without re-running the pipeline.
+!results/**/probe_metrics.json
+!results/probe_summary.json
+!results/extract_embeddings_summary.json
+!results/scdl_convert_summary.json
+!results/uc/
+!results/dcm/
+!results/luad/
 *.pt
 *.ckpt
 *.nemo

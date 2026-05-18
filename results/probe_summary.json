@@ -1,0 +1,83 @@
+[
+  {
+    "disease": "dcm",
+    "status": "done",
+    "model_path": "results/dcm/probe.joblib",
+    "metrics_path": "results/dcm/probe_metrics.json",
+    "n_features": 256,
+    "test_metrics": {
+      "n": 30000,
+      "n_disease": 15000,
+      "n_healthy": 15000,
+      "accuracy": 0.8999666666666667,
+      "f1_macro": 0.8999456302354236,
+      "precision_macro": 0.9003033217602671,
+      "recall_macro": 0.8999666666666666,
+      "roc_auc": 0.9654420822222223,
+      "confusion_matrix": [
+        [
+          13282,
+          1718
+        ],
+        [
+          1283,
+          13717
+        ]
+      ]
+    }
+  },
+  {
+    "disease": "uc",
+    "status": "done",
+    "model_path": "results/uc/probe.joblib",
+    "metrics_path": "results/uc/probe_metrics.json",
+    "n_features": 256,
+    "test_metrics": {
+      "n": 11564,
+      "n_disease": 5020,
+      "n_healthy": 6544,
+      "accuracy": 0.9710307851954341,
+      "f1_macro": 0.9705891836198468,
+      "precision_macro": 0.9695923784438263,
+      "recall_macro": 0.9717597215051773,
+      "roc_auc": 0.9957790476236863,
+      "confusion_matrix": [
+        [
+          6323,
+          221
+        ],
+        [
+          114,
+          4906
+        ]
+      ]
+    }
+  },
+  {
+    "disease": "luad",
+    "status": "done",
+    "model_path": "results/luad/probe.joblib",
+    "metrics_path": "results/luad/probe_metrics.json",
+    "n_features": 256,
+    "test_metrics": {
+      "n": 30000,
+      "n_disease": 15000,
+      "n_healthy": 15000,
+      "accuracy": 0.9790333333333333,
+      "f1_macro": 0.979033332750926,
+      "precision_macro": 0.9790333865592652,
+      "recall_macro": 0.9790333333333333,
+      "roc_auc": 0.9980361866666667,
+      "confusion_matrix": [
+        [
+          14688,
+          312
+        ],
+        [
+          317,
+          14683
+        ]
+      ]
+    }
+  }
+]

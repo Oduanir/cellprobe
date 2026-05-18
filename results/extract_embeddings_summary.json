@@ -1,0 +1,44 @@
+[
+  {
+    "disease": "dcm",
+    "split": "train",
+    "status": "done",
+    "predictions": "results/dcm/embeddings/train/predictions__rank_0.pt",
+    "size_mb": 71.7
+  },
+  {
+    "disease": "dcm",
+    "split": "val",
+    "status": "done",
+    "predictions": "results/dcm/embeddings/val/predictions__rank_0.pt",
+    "size_mb": 15.4
+  },
+  {
+    "disease": "dcm",
+    "split": "test",
+    "status": "done",
+    "predictions": "results/dcm/embeddings/test/predictions__rank_0.pt",
+    "size_mb": 15.4
+  },
+  {
+    "disease": "luad",
+    "split": "train",
+    "status": "done",
+    "predictions": "results/luad/embeddings/train/predictions__rank_0.pt",
+    "size_mb": 71.7
+  },
+  {
+    "disease": "luad",
+    "split": "val",
+    "status": "done",
+    "predictions": "results/luad/embeddings/val/predictions__rank_0.pt",
+    "size_mb": 15.4
+  },
+  {
+    "disease": "luad",
+    "split": "test",
+    "status": "done",
+    "predictions": "results/luad/embeddings/test/predictions__rank_0.pt",
+    "size_mb": 15.4
+  }
+]
