@@ -1,0 +1,196 @@
+[
+  {
+    "disease": "uc",
+    "panel_size": 50,
+    "opentargets_targets": 500,
+    "panel_is_ot_derived": true,
+    "top_k": 20,
+    "status": "done",
+    "spearman_shift_vs_otscore": 0.158031212484994,
+    "n_ranked": 50,
+    "mean_ot_score_in_top_k": 0.5068893113707065,
+    "mean_ot_score_in_panel": 0.5019286520997549,
+    "top_k_genes": [
+      {
+        "rank_by_shift": 0,
+        "ensembl_id": "ENSG00000134460",
+        "symbol": "IL2RA",
+        "name": "interleukin 2 receptor subunit alpha",
+        "mean_cosine_shift": 0.0009453654056414962,
+        "delta_p_disease": -2.3841858265427618e-08,
+        "opentargets_score": 0.41577038770289276
+      },
+      {
+        "rank_by_shift": 1,
+        "ensembl_id": "ENSG00000099866",
+        "symbol": "MADCAM1",
+        "name": "mucosal vascular addressin cell adhesion molecule 1",
+        "mean_cosine_shift": 0.0007414023275487125,
+        "delta_p_disease": 0.0,
+        "opentargets_score": 0.4029849153518034
+      },
+      {
+        "rank_by_shift": 2,
+        "ensembl_id": "ENSG00000162594",
+        "symbol": "IL23R",
+        "name": "interleukin 23 receptor",
+        "mean_cosine_shift": 0.0006881952285766602,
+        "delta_p_disease": 0.0,
+        "opentargets_score": 0.5906361085232947
+      },
+      {
+        "rank_by_shift": 3,
+        "ensembl_id": "ENSG00000091138",
+        "symbol": "SLC26A3",
+        "name": "solute carrier family 26 member 3",
+        "mean_cosine_shift": 0.0004333704710006714,
+        "delta_p_disease": 2.9802322387695312e-08,
+        "opentargets_score": 0.512332661304462
+      },
+      {
+        "rank_by_shift": 4,
+        "ensembl_id": "ENSG00000167207",
+        "symbol": "NOD2",
+        "name": "nucleotide binding oligomerization domain containing 2",
+        "mean_cosine_shift": 0.0003860592842102051,
+        "delta_p_disease": 0.0,
+        "opentargets_score": 0.6274498366612973
+      },
+      {
+        "rank_by_shift": 5,
+        "ensembl_id": "ENSG00000119919",
+        "symbol": "NKX2-3",
+        "name": "NK2 homeobox 3",
+        "mean_cosine_shift": 0.0003812834620475769,
+        "delta_p_disease": -4.470348358154297e-08,
+        "opentargets_score": 0.5316655767729715
+      },
+      {
+        "rank_by_shift": 6,
+        "ensembl_id": "ENSG00000115604",
+        "symbol": "IL18R1",
+        "name": "interleukin 18 receptor 1",
+        "mean_cosine_shift": 0.00036312639713287354,
+        "delta_p_disease": -2.980232238769531e-07,
+        "opentargets_score": 0.4154425109845478
+      },
+      {
+        "rank_by_shift": 7,
+        "ensembl_id": "ENSG00000095303",
+        "symbol": "PTGS1",
+        "name": "prostaglandin-endoperoxide synthase 1",
+        "mean_cosine_shift": 0.00026038289070129395,
+        "delta_p_disease": 0.0,
+        "opentargets_score": 0.6143725039193904
+      },
+      {
+        "rank_by_shift": 8,
+        "ensembl_id": "ENSG00000121281",
+        "symbol": "ADCY7",
+        "name": "adenylate cyclase 7",
+        "mean_cosine_shift": 0.00025391578674316406,
+        "delta_p_disease": 2.3841858265427618e-08,
+        "opentargets_score": 0.4990459533590354
+      },
+      {
+        "rank_by_shift": 9,
+        "ensembl_id": "ENSG00000142224",
+        "symbol": "IL19",
+        "name": "interleukin 19",
+        "mean_cosine_shift": 0.00023740530014038086,
+        "delta_p_disease": -1.1920928955078125e-07,
+        "opentargets_score": 0.4378177756891684
+      },
+      {
+        "rank_by_shift": 10,
+        "ensembl_id": "ENSG00000170989",
+        "symbol": "S1PR1",
+        "name": "sphingosine-1-phosphate receptor 1",
+        "mean_cosine_shift": 0.00023605993192177266,
+        "delta_p_disease": -3.4059798537100505e-08,
+        "opentargets_score": 0.5846355210830079
+      },
+      {
+        "rank_by_shift": 11,
+        "ensembl_id": "ENSG00000134242",
+        "symbol": "PTPN22",
+        "name": "protein tyrosine phosphatase non-receptor type 22",
+        "mean_cosine_shift": 0.00022924940276425332,
+        "delta_p_disease": 1.9868215517249155e-08,
+        "opentargets_score": 0.41826522251353476
+      },
+      {
+        "rank_by_shift": 12,
+        "ensembl_id": "ENSG00000100311",
+        "symbol": "PDGFB",
+        "name": "platelet derived growth factor subunit B",
+        "mean_cosine_shift": 0.00022867321968078613,
+        "delta_p_disease": -5.960464477539063e-08,
+        "opentargets_score": 0.44317391123050726
+      },
+      {
+        "rank_by_shift": 13,
+        "ensembl_id": "ENSG00000132170",
+        "symbol": "PPARG",
+        "name": "peroxisome proliferator activated receptor gamma",
+        "mean_cosine_shift": 0.0002282857894897461,
+        "delta_p_disease": 0.0,
+        "opentargets_score": 0.6314192483119688
+      },
+      {
+        "rank_by_shift": 14,
+        "ensembl_id": "ENSG00000118503",
+        "symbol": "TNFAIP3",
+        "name": "TNF alpha induced protein 3",
+        "mean_cosine_shift": 0.000193147556274198,
+        "delta_p_disease": 5.183012685705535e-09,
+        "opentargets_score": 0.4270182039951538
+      },
+      {
+        "rank_by_shift": 15,
+        "ensembl_id": "ENSG00000128604",
+        "symbol": "IRF5",
+        "name": "interferon regulatory factor 5",
+        "mean_cosine_shift": 0.00019162893295288086,
+        "delta_p_disease": -3.973643103449831e-08,
+        "opentargets_score": 0.5145771905342821
+      },
+      {
+        "rank_by_shift": 16,
+        "ensembl_id": "ENSG00000105397",
+        "symbol": "TYK2",
+        "name": "tyrosine kinase 2",
+        "mean_cosine_shift": 0.0001864254445536062,
+        "delta_p_disease": -1.1920929132713809e-08,
+        "opentargets_score": 0.534582278373835
+      },
+      {
+        "rank_by_shift": 17,
+        "ensembl_id": "ENSG00000073756",
+        "symbol": "PTGS2",
+        "name": "prostaglandin-endoperoxide synthase 2",
+        "mean_cosine_shift": 0.00017523765563964844,
+        "delta_p_disease": 1.7029899268550253e-08,
+        "opentargets_score": 0.6258582399171752
+      },
+      {
+        "rank_by_shift": 18,
+        "ensembl_id": "ENSG00000163362",
+        "symbol": "INAVA",
+        "name": "innate immunity activator",
+        "mean_cosine_shift": 0.00017511844635009766,
+        "delta_p_disease": 0.0,
+        "opentargets_score": 0.507917788999701
+      },
+      {
+        "rank_by_shift": 19,
+        "ensembl_id": "ENSG00000145623",
+        "symbol": "OSMR",
+        "name": "oncostatin M receptor",
+        "mean_cosine_shift": 0.00017508864402770996,
+        "delta_p_disease": 1.4901161193847656e-08,
+        "opentargets_score": 0.4028203921861007
+      }
+    ]
+  }
+]

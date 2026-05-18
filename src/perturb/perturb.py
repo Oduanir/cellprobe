@@ -50,12 +50,38 @@ import time
 from collections import Counter
 from pathlib import Path
 
+import urllib.request
+
 import anndata as ad
 import joblib
 import numpy as np
 import torch
 import yaml
 from scipy.sparse import csr_matrix
+
+OT_GRAPHQL_URL = "https://api.platform.opentargets.org/api/v4/graphql"
+OT_QUERY = """
+query DiseaseTargets($efoId: String!, $size: Int!) {
+  disease(efoId: $efoId) {
+    name
+    associatedTargets(page: {index: 0, size: $size}) {
+      rows { score target { id approvedSymbol } }
+    }
+  }
+}
+"""
+
+
+def fetch_opentargets_candidates(efo_id: str, size: int = 300) -> list[tuple[str, str, float]]:
+    """Return [(ensembl, symbol, score)] from OpenTargets for a given disease EFO."""
+    body = json.dumps({"query": OT_QUERY,
+                       "variables": {"efoId": efo_id, "size": size}}).encode()
+    req = urllib.request.Request(OT_GRAPHQL_URL, data=body,
+                                 headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        data = json.loads(resp.read())
+    rows = data["data"]["disease"]["associatedTargets"]["rows"]
+    return [(r["target"]["id"], r["target"]["approvedSymbol"], r["score"]) for r in rows]
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 INFER_WRAPPER = REPO_ROOT / "scripts" / "infer_wrapper.py"
@@ -158,6 +184,7 @@ def perturb_disease(
     top_tokens: int,
     micro_batch_size: int,
     max_genes: int | None,
+    opentargets_efo: str | None = None,
 ) -> dict:
     test_h5ad = data_root / disease_key / "splits" / "test" / f"{disease_key}.h5ad"
     test_pt = results_root / disease_key / "embeddings" / "test" / "predictions__rank_0.pt"
@@ -202,24 +229,45 @@ def perturb_disease(
     emb_baseline = p0["embeddings"].float().numpy()
     print(f"[{disease_key}] baseline embeddings shape={emb_baseline.shape}")
 
-    # 2. Build the candidate list from the actual tokens used
-    top_token_freq = select_token_candidates(input_ids, top_tokens)
-    candidates = []
-    for token_id, n_in in top_token_freq:
-        ens = tok_to_ens.get(token_id)
-        if ens is None or ens not in ensembl_to_var_idx:
-            continue
-        gene_idx_in_adata = ensembl_to_var_idx[ens]
-        # Which cells in our subset had this token?
-        cells_with_token = (input_ids == token_id).any(axis=1)
-        candidates.append({
-            "token_id": int(token_id),
-            "ensembl_id": ens,
-            "gene_idx_in_adata": int(gene_idx_in_adata),
-            "n_cells_with_token": int(cells_with_token.sum()),
-            "cells_with_token_mask": cells_with_token,
-        })
-    print(f"[{disease_key}] {len(candidates)} candidate tokens mapped to genes")
+    # 2. Build candidate list
+    #    - If opentargets_efo is provided: query OT, filter to genes in var, find their token IDs
+    #    - Otherwise (default): top-N most-frequent tokens used by Geneformer in baseline
+    candidates: list[dict] = []
+    if opentargets_efo:
+        ot = fetch_opentargets_candidates(opentargets_efo, size=top_tokens * 2)
+        print(f"[{disease_key}] OpenTargets {opentargets_efo}: {len(ot)} candidates")
+        for ens, sym, ot_score in ot:
+            if ens not in ensembl_to_var_idx or ens not in ens_to_tok:
+                continue
+            token_id = ens_to_tok[ens]
+            cells_with_token = (input_ids == token_id).any(axis=1)
+            if cells_with_token.sum() == 0:
+                continue
+            candidates.append({
+                "token_id": int(token_id),
+                "ensembl_id": ens,
+                "symbol": sym,
+                "opentargets_score": float(ot_score),
+                "gene_idx_in_adata": int(ensembl_to_var_idx[ens]),
+                "n_cells_with_token": int(cells_with_token.sum()),
+                "cells_with_token_mask": cells_with_token,
+            })
+        print(f"[{disease_key}] {len(candidates)} OT candidates kept (in var + appearing in tokens)")
+    else:
+        top_token_freq = select_token_candidates(input_ids, top_tokens)
+        for token_id, n_in in top_token_freq:
+            ens = tok_to_ens.get(token_id)
+            if ens is None or ens not in ensembl_to_var_idx:
+                continue
+            cells_with_token = (input_ids == token_id).any(axis=1)
+            candidates.append({
+                "token_id": int(token_id),
+                "ensembl_id": ens,
+                "gene_idx_in_adata": int(ensembl_to_var_idx[ens]),
+                "n_cells_with_token": int(cells_with_token.sum()),
+                "cells_with_token_mask": cells_with_token,
+            })
+        print(f"[{disease_key}] {len(candidates)} candidate tokens mapped to genes")
     if max_genes is not None:
         candidates = candidates[:max_genes]
 
@@ -265,6 +313,8 @@ def perturb_disease(
             row = {
                 "rank_in_panel": i,
                 "ensembl_id": c["ensembl_id"],
+                "symbol": c.get("symbol", ""),
+                "opentargets_score": c.get("opentargets_score"),
                 "token_id": c["token_id"],
                 "n_cells_affected": int(mask.sum()),
                 "mean_cosine_shift": float(shifts.mean()),
@@ -313,6 +363,9 @@ def main() -> None:
     parser.add_argument("--max-genes", type=int, default=None,
                         help="cap on the number of genes actually perturbed (for smoke testing)")
     parser.add_argument("--micro-batch-size", type=int, default=16)
+    parser.add_argument("--opentargets-efo", default=None,
+                        help="If set (e.g. EFO_0000729), use OpenTargets disease-target associations "
+                             "as the candidate gene list instead of top-frequency tokens.")
     args = parser.parse_args()
 
     cfg = yaml.safe_load(args.config.read_text())
@@ -327,6 +380,7 @@ def main() -> None:
         top_tokens=args.top_tokens,
         micro_batch_size=args.micro_batch_size,
         max_genes=args.max_genes,
+        opentargets_efo=args.opentargets_efo,
     )
 
 
