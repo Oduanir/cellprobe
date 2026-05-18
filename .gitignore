@@ -32,9 +32,10 @@ results/**
 *.h5
 *.tar.gz
 
-# IDE
+# IDE / agent state
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 

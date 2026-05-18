@@ -8,6 +8,10 @@ diseases:
     tissue_general: "heart"
     disease_label: "dilated cardiomyopathy"
     healthy_label: "normal"
+    note: "Full deposit is 482,581 DCM + 282,372 normal. Subsampled at download time to keep classes balanced and fit a 16 GB-RAM cloud VM (g6.xlarge). Ample for Geneformer fine-tuning at the Theodoris 2023 scale."
+    max_disease_cells: 100000
+    max_healthy_cells: 100000
+    seed: 42
 
   uc:
     name: "Ulcerative colitis"
@@ -27,3 +31,7 @@ diseases:
     tissue_general: "lung"
     disease_label: "lung adenocarcinoma"
     healthy_label: "normal"
+    note: "Full deposit is 410,927 LUAD + 212,889 normal. Subsampled at download time to keep classes balanced and fit a 16 GB-RAM cloud VM."
+    max_disease_cells: 100000
+    max_healthy_cells: 100000
+    seed: 42

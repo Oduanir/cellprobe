@@ -97,29 +97,36 @@ Parked for follow-up (see `FUTURE_PROJECTS.md`): responder prediction, Perturb-s
 
 ## Compute
 
-Two-tier compute matching what an SA would recommend to a customer: consumer GPU for pipeline validation, A100 for production.
+**AWS EC2 in `eu-west-3` (Paris)** — exactly what an SA would prescribe to an EMEA biopharma customer: NVIDIA stack on the cloud their IT already trusts, EU-resident, pay-per-second.
 
-| | Local dev | Production runs |
+| | Dev + smoke tests | Production runs |
 |---|---|---|
-| Hardware | RTX 4070 SUPER (12 GB) — pipeline validation, smoke tests | **Lambda Labs A100 40 GB** (~$1.10/h) |
-| Access | `ssh gpu` over Tailscale to WSL2 host | Direct SSH from Mac |
-| Workload | Tokenization sanity, 1-epoch smoke run, in silico perturbation testing | 3 full fine-tuning runs, in silico perturbation production sweep |
+| Hardware | `g6.xlarge` (1× NVIDIA L4 24 GB, 4 vCPU, 16 GB RAM) | Same instance, or `g6.2xlarge` if data-loader bottlenecked |
+| AMI | Deep Learning OSS Nvidia Driver AMI (Ubuntu 22.04) — driver + Docker + NVIDIA Container Toolkit pre-installed | idem |
+| Access | SSH from Mac | idem |
+| Workload | Pipeline validation, tokenization, 1-epoch smoke run | 3 full fine-tuning runs + in silico perturbation sweep |
 
-Budget envelope: **$50-100**. Realistic A100 expectation: 10-20 h × $1.10 ≈ $11-22 across the three diseases. See `docs/SETUP.md` for the full Day 1-2 procedure.
+Geneformer 10M (~10M params) fits comfortably in 24 GB VRAM with bf16. L4 is Ada Lovelace (newer than A10G's Ampere), ships fast FP8/INT8 tensor cores, and at $0.805/h Paris it's cheaper than g5 would have been (`g5.xlarge` is **not offered in `eu-west-3`** — only `g4dn` and `g6` are; picking `g6` is also the higher-architecture, lower-price choice).
+
+The earlier RTX 4070 SUPER local-GPU path (`docs/SETUP.md`) remains documented for reference; the active workflow is on AWS (`docs/SETUP_AWS.md`).
+
+Budget envelope: **$50-100**. Realistic AWS expectation: ~$16 compute + ~$5 storage = **~$20** across the three diseases. See `docs/SETUP_AWS.md` for the full procedure.
 
 ## Timeline (10–14 days, focused)
 
 | Day | Milestone | Status |
 |---|---|---|
-| 1–2 | WSL2 + Docker + NVIDIA Container Toolkit; NGC login; BioNeMo 2.7.1 pull; Geneformer 10M smoke test on RTX 4070 SUPER | ✅ done 2026-05-13 |
-| 3 | Source DCM/UC/LUAD scRNA-seq from CELLxGENE Census; data download script | |
-| 4–5 | Parameterized data prep pipeline (QC + Geneformer tokenization + SCDL conversion); same code, 3 configs | |
-| 6 | Smoke fine-tuning runs on RTX 4070 SUPER (1 epoch, subset) to validate the training loop | |
-| 7–8 | Production fine-tuning on Lambda Labs A100 — 3 disease classifiers | |
+| 1–2 | WSL2 + Docker + NVIDIA Container Toolkit; NGC login; BioNeMo 2.7.1 pull; Geneformer 10M smoke test on RTX 4070 SUPER (local validation path) | ✅ done 2026-05-13 |
+| 3 | Source DCM/UC/LUAD scRNA-seq from CELLxGENE Census; data download script | ✅ done 2026-05-16 |
+| 3.5 | **Pivot local-GPU → AWS** (loss of local GPU access). Submit G quota request, document the AWS procedure (`docs/SETUP_AWS.md`) | 🔁 in progress 2026-05-18 |
+| 4 | Launch `g5.xlarge` in `eu-west-3`, replay BioNeMo container + smoke test on AWS, re-download CELLxGENE datasets | |
+| 5 | Parameterized data prep pipeline (QC + Geneformer tokenization + SCDL conversion); same code, 3 configs | |
+| 6 | Smoke fine-tuning runs on `g5.xlarge` (1 epoch, subset) to validate the training loop | |
+| 7–8 | Production fine-tuning on `g5.xlarge` (or `g5.2xlarge` if CPU-bound) — 3 disease classifiers | |
 | 9 | In silico perturbation analysis (gene embedding perturbation, candidate target ranking) | |
 | 10 | OpenTargets / DGIdb validation — enrichment of known targets in top-K vs random | |
 | 11 | Cross-disease comparison figures, classifier metrics table, baseline LogReg/MLP comparison | |
-| 12–13 | Blog post draft (LinkedIn + Medium) — narrative around methodology generalizability | |
+| 12–13 | Blog post draft (LinkedIn + Medium) — narrative: "Geneformer fine-tuning across 3 indications, NVIDIA stack on AWS" | |
 | 14 | Polish, publish, link from LinkedIn / CV / cover letter | |
 
 ## Decisions locked
@@ -130,7 +137,7 @@ Budget envelope: **$50-100**. Realistic A100 expectation: 10-20 h × $1.10 ≈ $
 | Diseases | **DCM + UC + LUAD** (cardio + immuno + onco) — pipeline-first, three configs | 2026-05-13 |
 | Task | Disease-vs-healthy binary classification + gene-embedding perturbation ranking | 2026-05-13 |
 | BioNeMo install | **NGC container** `nvcr.io/nvidia/clara/bionemo-framework:2.7.1` (pinned) | 2026-05-12 |
-| GPU rental | **Lambda Labs A100 40GB** (~$1.10/h) | 2026-05-12 |
+| GPU rental | **AWS EC2 `g6.xlarge` in `eu-west-3` (Paris)** — 1× NVIDIA L4 24 GB Ada Lovelace, ~$0.805/h. Pivoted from Lambda Labs A100 after loss of local GPU access; landed on `g6` (not `g5`) because `g5` is not offered in Paris — turned out cheaper and a newer architecture. | 2026-05-18 |
 | Blog target | **LinkedIn primary + Medium cross-post** | 2026-05-12 |
 
 ## Success criteria
