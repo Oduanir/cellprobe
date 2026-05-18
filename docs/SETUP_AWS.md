@@ -253,9 +253,27 @@ Estimated total project cost (Paris, on-demand):
 
 Well within the $50–100 envelope.
 
-## 10. What's next
+## 10. Data prep pipeline (QC + split + SCDL conversion)
 
-- Wire `src/data/preprocess.py` (QC + tokenization + SCDL conversion) — same as the original plan, just running on AWS.
+Two-step pipeline, both wrapped in `scripts/run_data_pipeline.sh`:
+
+```bash
+# On the EC2 instance, with the repo synced to ~/bionemo-workspace/rtx-code
+cd ~/bionemo-workspace/rtx-code
+./scripts/run_data_pipeline.sh           # all 3 diseases
+./scripts/run_data_pipeline.sh --only dcm  # one disease only
+./scripts/run_data_pipeline.sh --force   # overwrite existing outputs
+```
+
+What it does:
+
+1. **`src.data.preprocess`** — runs scanpy QC (cells: ≥200 genes, <20% mitochondrial; genes: present in ≥10 cells; configurable via `qc:` block in `configs/diseases.yaml`), then a stratified 70/15/15 train/val/test split by disease label. Writes `data/<disease>/splits/{train,val,test}/<disease>.h5ad`.
+2. **`src.data.scdl_convert`** — wraps the BioNeMo CLI `convert_h5ad_to_scdl` (with `--use-X-not-raw` because CELLxGENE Census stores raw counts in `.X`). Produces the SCDL memmap layout under `data/<disease>/scdl/{train,val,test}/` — this is what `train_geneformer` / `infer_geneformer` consume. **Rank-based gene tokenization is performed here**, not at training time.
+
+Summary JSONs land at `data/preprocess_summary.json` and `data/scdl_convert_summary.json`.
+
+## 11. What's next
+
 - Launch fine-tuning runs on the same `g6.xlarge` (or step up to `g6.2xlarge` if the data loader is CPU-bound).
 - In silico perturbation analysis + OpenTargets/DGIdb validation.
 - Blog post angle bonus: "deploying NVIDIA's BioNeMo stack on AWS — the customer reality for an EMEA pharma."
