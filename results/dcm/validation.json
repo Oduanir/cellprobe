@@ -1,0 +1,194 @@
+{
+  "disease": "dcm",
+  "panel_size": 50,
+  "opentargets_targets": 500,
+  "panel_is_ot_derived": true,
+  "top_k": 20,
+  "status": "done",
+  "spearman_shift_vs_otscore": 0.29325330132052824,
+  "n_ranked": 50,
+  "mean_ot_score_in_top_k": 0.8090362569527532,
+  "mean_ot_score_in_panel": 0.7917484967974473,
+  "top_k_genes": [
+    {
+      "rank_by_shift": 0,
+      "ensembl_id": "ENSG00000134571",
+      "symbol": "MYBPC3",
+      "name": "myosin binding protein C3",
+      "mean_cosine_shift": 0.0007740699220448732,
+      "delta_p_disease": 2.76611842764396e-07,
+      "opentargets_score": 0.8418604015359993
+    },
+    {
+      "rank_by_shift": 1,
+      "ensembl_id": "ENSG00000203867",
+      "symbol": "RBM20",
+      "name": "RNA binding motif protein 20",
+      "mean_cosine_shift": 0.0007146423449739814,
+      "delta_p_disease": -2.0716954907129548e-07,
+      "opentargets_score": 0.8631414753294583
+    },
+    {
+      "rank_by_shift": 2,
+      "ensembl_id": "ENSG00000155657",
+      "symbol": "TTN",
+      "name": "titin",
+      "mean_cosine_shift": 0.0006518798181787133,
+      "delta_p_disease": 5.543232077798166e-07,
+      "opentargets_score": 0.8934264499117607
+    },
+    {
+      "rank_by_shift": 3,
+      "ensembl_id": "ENSG00000162614",
+      "symbol": "NEXN",
+      "name": "nexilin F-actin binding protein",
+      "mean_cosine_shift": 0.0005696276784874499,
+      "delta_p_disease": -1.8179416372277046e-07,
+      "opentargets_score": 0.7992299530468939
+    },
+    {
+      "rank_by_shift": 4,
+      "ensembl_id": "ENSG00000198947",
+      "symbol": "DMD",
+      "name": "dystrophin",
+      "mean_cosine_shift": 0.0005671673570759594,
+      "delta_p_disease": -2.767047817542334e-07,
+      "opentargets_score": 0.8131263221725431
+    },
+    {
+      "rank_by_shift": 5,
+      "ensembl_id": "ENSG00000170624",
+      "symbol": "SGCD",
+      "name": "sarcoglycan delta",
+      "mean_cosine_shift": 0.0005654279375448823,
+      "delta_p_disease": -5.730411203330732e-07,
+      "opentargets_score": 0.8097524064208395
+    },
+    {
+      "rank_by_shift": 6,
+      "ensembl_id": "ENSG00000102683",
+      "symbol": "SGCG",
+      "name": "sarcoglycan gamma",
+      "mean_cosine_shift": 0.0004216229426674545,
+      "delta_p_disease": -7.382848252746044e-07,
+      "opentargets_score": 0.8049540881003964
+    },
+    {
+      "rank_by_shift": 7,
+      "ensembl_id": "ENSG00000138347",
+      "symbol": "MYPN",
+      "name": "myopalladin",
+      "mean_cosine_shift": 0.00041613736539147794,
+      "delta_p_disease": -4.5529330350291275e-07,
+      "opentargets_score": 0.8265066071727007
+    },
+    {
+      "rank_by_shift": 8,
+      "ensembl_id": "ENSG00000077522",
+      "symbol": "ACTN2",
+      "name": "actinin alpha 2",
+      "mean_cosine_shift": 0.00041150220204144716,
+      "delta_p_disease": -2.295882666203397e-07,
+      "opentargets_score": 0.813277234561694
+    },
+    {
+      "rank_by_shift": 9,
+      "ensembl_id": "ENSG00000035403",
+      "symbol": "VCL",
+      "name": "vinculin",
+      "mean_cosine_shift": 0.00040320775588043034,
+      "delta_p_disease": -2.475108260568959e-07,
+      "opentargets_score": 0.7169656928753447
+    },
+    {
+      "rank_by_shift": 10,
+      "ensembl_id": "ENSG00000112319",
+      "symbol": "EYA4",
+      "name": "EYA transcriptional coactivator and phosphatase 4",
+      "mean_cosine_shift": 0.0003697415522765368,
+      "delta_p_disease": -1.4088369937326206e-07,
+      "opentargets_score": 0.7148153841689908
+    },
+    {
+      "rank_by_shift": 11,
+      "ensembl_id": "ENSG00000073578",
+      "symbol": "SDHA",
+      "name": "succinate dehydrogenase complex flavoprotein subunit A",
+      "mean_cosine_shift": 0.00033230782719329,
+      "delta_p_disease": -4.319583695178153e-07,
+      "opentargets_score": 0.784425264539403
+    },
+    {
+      "rank_by_shift": 12,
+      "ensembl_id": "ENSG00000079739",
+      "symbol": "PGM1",
+      "name": "phosphoglucomutase 1",
+      "mean_cosine_shift": 0.000321942672599107,
+      "delta_p_disease": -5.24142421909346e-07,
+      "opentargets_score": 0.844072365404884
+    },
+    {
+      "rank_by_shift": 13,
+      "ensembl_id": "ENSG00000197616",
+      "symbol": "MYH6",
+      "name": "myosin heavy chain 6",
+      "mean_cosine_shift": 0.0003188773989677429,
+      "delta_p_disease": 6.556510925292969e-07,
+      "opentargets_score": 0.7654137791059535
+    },
+    {
+      "rank_by_shift": 14,
+      "ensembl_id": "ENSG00000183873",
+      "symbol": "SCN5A",
+      "name": "sodium voltage-gated channel alpha subunit 5",
+      "mean_cosine_shift": 0.00031659804517403245,
+      "delta_p_disease": -3.5594885616774263e-07,
+      "opentargets_score": 0.8160232156649623
+    },
+    {
+      "rank_by_shift": 15,
+      "ensembl_id": "ENSG00000022267",
+      "symbol": "FHL1",
+      "name": "four and a half LIM domains 1",
+      "mean_cosine_shift": 0.00031468653469346464,
+      "delta_p_disease": -4.857144517700362e-07,
+      "opentargets_score": 0.8321536368873484
+    },
+    {
+      "rank_by_shift": 16,
+      "ensembl_id": "ENSG00000129991",
+      "symbol": "TNNI3",
+      "name": "troponin I3, cardiac type",
+      "mean_cosine_shift": 0.0003087939112447202,
+      "delta_p_disease": -1.1268116395513061e-06,
+      "opentargets_score": 0.8259527784337285
+    },
+    {
+      "rank_by_shift": 17,
+      "ensembl_id": "ENSG00000092054",
+      "symbol": "MYH7",
+      "name": "myosin heavy chain 7",
+      "mean_cosine_shift": 0.0003049643128179014,
+      "delta_p_disease": 4.285857926333847e-07,
+      "opentargets_score": 0.8482243420984423
+    },
+    {
+      "rank_by_shift": 18,
+      "ensembl_id": "ENSG00000069431",
+      "symbol": "ABCC9",
+      "name": "ATP binding cassette subfamily C member 9",
+      "mean_cosine_shift": 0.0002882345288526267,
+      "delta_p_disease": -3.86527091222888e-07,
+      "opentargets_score": 0.7827687360180094
+    },
+    {
+      "rank_by_shift": 19,
+      "ensembl_id": "ENSG00000131018",
+      "symbol": "SYNE1",
+      "name": "spectrin repeat containing nuclear envelope protein 1",
+      "mean_cosine_shift": 0.00028710122569464147,
+      "delta_p_disease": 5.960464477539063e-08,
+      "opentargets_score": 0.7846350056057106
+    }
+  ]
+}
