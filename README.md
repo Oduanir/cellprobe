@@ -1,166 +1,94 @@
-# RTX-CODE — Fine-tuning Geneformer with NVIDIA BioNeMo
+# RTX-CODE
+
+**Drug-target identification across three indications using NVIDIA BioNeMo's Geneformer foundation model.**
+
+![Top-10 perturbation candidates per disease](results/figures/fig2_top10_targets.png)
+
+For each of three drug-discovery indications — **ulcerative colitis**, **dilated cardiomyopathy**, **lung adenocarcinoma** — this project shows how a frozen, pretrained Geneformer encoder can (1) classify disease vs. healthy single cells with >95 % accuracy and (2) prioritise candidate therapeutic targets via in-silico gene knockout, recovering known drug targets in the top-10 across all three diseases.
+
+The pipeline runs end-to-end on a single AWS EC2 instance with one NVIDIA L4 GPU, costs about **\$20** of compute, and is reproducible from a single shell command per stage.
+
+## Headline numbers
+
+| Indication | Cells (train/val/test) | Test AUC | Top-3 perturbation candidates |
+|---|---|---|---|
+| Ulcerative colitis | 54 k / 12 k / 12 k | **0.996** | IL2RA · MADCAM1 · IL23R |
+| Dilated cardiomyopathy | 140 k / 30 k / 30 k | **0.965** | MYBPC3 · RBM20 · TTN |
+| Lung adenocarcinoma | 140 k / 30 k / 30 k | **0.998** | SLC34A2 · DCBLD1 · CD74 |
+
+Every top-3 list contains genes that are either (a) targets of clinically used or late-stage IBD/oncology drugs (IL2RA → daclizumab, MADCAM1 → etrolizumab, ERBB2 → trastuzumab class) or (b) the most frequent causal mutations of the indication (TTN, MYBPC3, RBM20 for DCM).
+
+Full results, methodology, and per-gene tables: [`RESULTS.md`](RESULTS.md).
+
+## What this project actually does
+
+Three stages, one Python module each:
+
+1. **Data preparation** (`src/data/`) — download three scRNA-seq disease cohorts from CELLxGENE Census, apply standard QC, stratified split, and convert to BioNeMo's SCDL tokenised format.
+2. **Frozen-encoder probe** (`src/eval/`) — run inference with pretrained Geneformer 10M to obtain per-cell embeddings (256 dim), then train a scikit-learn MLP classifier on top. Mirrors the methodology of `bionemo.geneformer.scripts.celltype_classification_bench`.
+3. **In silico perturbation** (`src/perturb/`) — for a panel of disease-associated candidate genes (drawn from OpenTargets), zero the gene's column in the AnnData subset, re-run BioNeMo's `convert_h5ad_to_scdl` + `infer_geneformer`, and measure the cosine shift in cell embeddings. Validate the resulting ranking against OpenTargets' curated disease–target associations.
+
+All three stages are containerised in NVIDIA's official `bionemo-framework:2.7.1` Docker image and orchestrated by the bash wrappers under `scripts/`.
+
+## Reproducing the results
+
+The full procedure is documented in **[`docs/SETUP_AWS.md`](docs/SETUP_AWS.md)** — quota check, instance launch, BioNeMo container pull, smoke test, and the three pipeline scripts. A condensed view:
+
+```bash
+# On the AWS EC2 instance, after the BioNeMo container is loaded and code synced
+./scripts/run_data_pipeline.sh                  # stage 1
+./scripts/run_probe_pipeline.sh                 # stage 2
+# Per-disease perturbation (stage 3); EFO IDs in src/perturb/validate.py
+docker run --rm --gpus all ... bionemo-framework:2.7.1 \
+  python -m src.perturb.perturb --disease uc \
+    --n-cells 200 --max-genes 50 --opentargets-efo EFO_0000729
+
+# Generate the figures locally (no GPU needed)
+python scripts/make_figures.py
+```
+
+Compute envelope: **~$20** total on AWS EC2 `g6.xlarge` in `eu-west-3` (1 × NVIDIA L4 24 GB).
+
+## Repository layout
+
+```
+configs/diseases.yaml          # per-indication dataset id, EFO, QC overrides
+src/data/                      # download + QC + split + SCDL conversion
+src/eval/                      # embedding extraction + MLP probe + metrics
+src/perturb/                   # perturbation + OpenTargets validation
+scripts/                       # orchestration shell wrappers + figures
+docs/SETUP_AWS.md              # full AWS / BioNeMo bring-up procedure
+docs/SETUP.md                  # alternative local-GPU bring-up (WSL2 + RTX 4070 SUPER)
+docs/PROJECT_HISTORY.md        # design decisions, alternatives, internal notes
+results/<disease>/probe_metrics.json
+results/<disease>/perturbation/perturbation.json
+results/<disease>/validation.json
+results/figures/               # the 3 figures shown in RESULTS.md
+RESULTS.md                     # headline numbers and per-disease tables
+```
+
+## Stack
+
+- **NVIDIA BioNeMo Framework 2.7.1** (`nvcr.io/nvidia/clara/bionemo-framework:2.7.1`) — Geneformer 10M checkpoint, `convert_h5ad_to_scdl`, `infer_geneformer`
+- **CELLxGENE Census** — single-cell data source (Reichart 2022, Oliver 2024, Salcher 2022)
+- **OpenTargets Platform v25** — curated disease-target associations for validation (GraphQL API)
+- **AWS EC2 `g6.xlarge`** — single NVIDIA L4 GPU in `eu-west-3`
+- **scanpy / anndata** — h5ad I/O and QC
+- **scikit-learn** — MLP probe + cross-validation
+- **matplotlib / seaborn** — figures
 
 ## Context
 
-This project exists to support an application to **NVIDIA — Solutions Architect, AI for Drug Discovery (EMEA)**.
+This project was built as the technical artefact backing an application for **NVIDIA — Solutions Architect, AI for Drug Discovery (EMEA)** (JR2017335). The full design rationale, alternatives considered, and engineering trade-offs are captured in [`docs/PROJECT_HISTORY.md`](docs/PROJECT_HISTORY.md).
 
-The job is customer-facing technical advisory for biopharma clients adopting NVIDIA's AI stack (BioNeMo, Clara, Parabricks, foundation models, agentic AI). The candidate profile is strong on the biology/genomics side (PhD biostats, Head of DS at Enterome, NGS / RNA-seq / microbiome / drug development at Pharnext) but lighter on:
+## References
 
-- Hands-on fine-tuning of transformer foundation models
-- NVIDIA-specific tooling (BioNeMo, Triton, TensorRT, CUDA)
-- Foundation-model-era ML engineering at scale
+- Theodoris C. V. *et al.* (2023). [Transfer learning enables predictions in network biology](https://www.nature.com/articles/s41586-023-06139-9). *Nature* 618, 616–624.
+- Reichart D. *et al.* (2022). [Pathogenic variants damage cell composition and single-cell transcription in cardiomyopathies](https://www.science.org/doi/10.1126/science.abo1984). *Science* 377.
+- Oliver A. J. *et al.* (2024). [Single-cell integration reveals metaplasia in inflammatory gut diseases](https://www.nature.com/articles/s41586-024-07571-1). *Nature* 631.
+- Salcher S. *et al.* (2022). [High-resolution single-cell atlas reveals diversity and plasticity of tissue-resident neutrophils in non-small cell lung cancer](https://www.cell.com/cancer-cell/fulltext/S1535-6108(22)00499-3). *Cancer Cell* 40.
+- NVIDIA BioNeMo Framework documentation: <https://docs.nvidia.com/bionemo-framework/2.7.1/>
 
-A public GitHub project demonstrating fine-tuning a biological foundation model **using NVIDIA's own framework**, with a clean write-up, would close that gap visibly and demonstrate ability to be productive day-1 in the role.
+## License
 
-## Why this specific project
-
-**Geneformer + BioNeMo** is the strategic sweet spot:
-
-- **Geneformer** is a transformer foundation model for single-cell genomics, pretrained on ~30M human single cells. It learns gene network representations and can be fine-tuned for downstream tasks (cell type classification, perturbation prediction, disease state).
-- **BioNeMo** is NVIDIA's drug discovery framework. It ships Geneformer as a supported model with optimized training recipes, GPU acceleration, and Triton deployment paths.
-- **Single-cell genomics** is exactly the domain expertise the candidate already has (Enterome NGS / microbiome / RNA-seq, Pharnext translational). No domain ramp-up needed — focus stays on the ML/NVIDIA tooling.
-- **Coverage of role keywords**: foundation model fine-tuning, transformer training, healthcare/life sciences AI, NVIDIA platform, inference deployment, communication of complex AI to non-experts.
-
-Alternatives considered:
-- **ESM-2 fine-tuning** (protein language model) — easier, lighter compute, well-trodden path. Fallback if Geneformer setup proves too painful.
-- **MolMIM / DiffDock** (molecular generation, docking) — strong NVIDIA showcase but further from the candidate's bio expertise; would dilute the "I am the customer profile" angle.
-- **Agentic LLM for pharma literature** — on-trend but generic; doesn't show bio depth.
-
-Geneformer wins because it forces engagement with BioNeMo specifically AND leverages existing genomics expertise.
-
-## Goal
-
-Ship, in 10–14 days of focused work:
-
-1. A public GitHub repo with a clean, **pipeline-first** Geneformer fine-tuning framework applied to **three drug-discovery-relevant indications** (cardio, immuno, onco). One pipeline, three configs, three result sets — the reusable methodology is the deliverable, not a single benchmark.
-2. A blog post (LinkedIn primary + Medium cross-post) walking through the project — *"Fine-tuning Geneformer with NVIDIA BioNeMo for target identification across three drug-discovery indications"*. The blog post is the differentiator: NVIDIA Solutions Architects communicate constantly (whitepapers, hackathons, demos).
-3. Bonus if time allows: inference deployment via Triton Inference Server, with a latency/throughput benchmark.
-
-The goal is **not** scientific novelty. It is a credible, well-documented technical demonstration that can be linked from the CV / LinkedIn / cover letter — and that signals "I built something a customer could adopt".
-
-## Technical scope
-
-### Diseases
-
-Three indications, all sourced from CELLxGENE Census (BioNeMo's `bionemo-geneformer` package depends on `cellxgene_census` — supported path). Final dataset selections after auditing what's actually deposited in the curated Census:
-
-| Disease | Dataset (CELLxGENE Census) | Cells downloaded | Disease / healthy split | Why |
-|---|---|---|---|---|
-| **Dilated cardiomyopathy (DCM)** | Reichart et al. 2022, *Science* — "DCM/ACM heart cell atlas: All cells" (DOI 10.1126/science.abo1984) | 764,953 | 482,581 / 282,372 | Chaffin 2022 (the Theodoris/Geneformer benchmark) is not in the Census; Reichart 2022 is a richer DCM atlas with healthy controls in the same study. Heart failure has extensive OpenTargets coverage. |
-| **Ulcerative colitis (UC)** | Oliver et al. 2024, *Nature* — "Extended - All genes" (DOI 10.1038/s41586-024-07571-1) | 85,891 (healthy subsampled at download from 1.07M to 50k for class balance) | 35,891 / 50,000 | Smillie 2019 was the initial pick but its Census deposit contains only the healthy subset (no UC cells). Oliver 2024 is a more recent IBD atlas with both classes properly labeled. Immuno indication, Enterome-aligned. |
-| **Lung adenocarcinoma (LUAD)** | Salcher et al. 2022, *Cancer Cell* — "Single-cell lung cancer atlas (LuCA) -- core atlas" (DOI 10.1016/j.ccell.2022.10.008) | 623,816 | 410,927 / 212,889 | LuCA core is a meta-atlas integrating multiple LUAD studies (including Kim 2020) with shared healthy lung controls — better than any single primary study. Oncology, Enterome-aligned. |
-
-Dataset selection script: `src/data/download.py` (parameterized by `configs/diseases.yaml`).
-
-### Task
-
-**Target identification via in silico perturbation** — the Geneformer paper's flagship use case applied at scale across three indications:
-
-1. Fine-tune Geneformer on disease-vs-healthy binary classification per indication.
-2. Perturb gene embeddings (gene by gene) and rank candidates by their effect on shifting the disease cell state toward healthy.
-3. Validate the ranked list against known drug targets in **OpenTargets** / **DGIdb** for the disease. Metric: enrichment of known targets in top-K vs random.
-4. Compare across the 3 indications — does the same methodology generalize? Where does it fail?
-
-Parked for follow-up (see `FUTURE_PROJECTS.md`): responder prediction, Perturb-seq response, resistance.
-
-### Pipeline
-
-1. **Environment setup**
-   - BioNeMo Framework (NVIDIA NGC container or pip install)
-   - PyTorch + HuggingFace as needed
-   - GPU access (see compute section)
-2. **Data prep**
-   - Download dataset
-   - QC + filtering (standard scRNA-seq preprocessing)
-   - Tokenization for Geneformer (ranked gene representation)
-3. **Fine-tuning**
-   - Load Geneformer pretrained checkpoint from BioNeMo
-   - Fine-tune on the chosen task using BioNeMo's recipes
-   - Track training (loss curves, val metrics)
-4. **Evaluation**
-   - Test set metrics (accuracy, macro-F1, confusion matrix)
-   - Comparison vs a non-foundation baseline (logistic regression on highly-variable genes, or a simple MLP)
-   - Few-shot evaluation if interesting (does Geneformer beat baseline with very little labeled data?)
-5. **(Bonus) Inference deployment**
-   - Export model
-   - Deploy via Triton Inference Server
-   - Benchmark latency / throughput on GPU
-
-### Deliverables
-
-- `README.md` — project overview, results, how to reproduce
-- `notebooks/` — exploratory and reporting notebooks
-- `src/` — clean Python modules for data prep, training, eval
-- `configs/` — training configs (YAML)
-- `results/` — metrics, figures
-- `blog/` — draft of the blog post (Markdown), to be cross-posted on Medium / LinkedIn
-
-## Compute
-
-**AWS EC2 in `eu-west-3` (Paris)** — exactly what an SA would prescribe to an EMEA biopharma customer: NVIDIA stack on the cloud their IT already trusts, EU-resident, pay-per-second.
-
-| | Dev + smoke tests | Production runs |
-|---|---|---|
-| Hardware | `g6.xlarge` (1× NVIDIA L4 24 GB, 4 vCPU, 16 GB RAM) | Same instance, or `g6.2xlarge` if data-loader bottlenecked |
-| AMI | Deep Learning OSS Nvidia Driver AMI (Ubuntu 22.04) — driver + Docker + NVIDIA Container Toolkit pre-installed | idem |
-| Access | SSH from Mac | idem |
-| Workload | Pipeline validation, tokenization, 1-epoch smoke run | 3 full fine-tuning runs + in silico perturbation sweep |
-
-Geneformer 10M (~10M params) fits comfortably in 24 GB VRAM with bf16. L4 is Ada Lovelace (newer than A10G's Ampere), ships fast FP8/INT8 tensor cores, and at $0.805/h Paris it's cheaper than g5 would have been (`g5.xlarge` is **not offered in `eu-west-3`** — only `g4dn` and `g6` are; picking `g6` is also the higher-architecture, lower-price choice).
-
-The earlier RTX 4070 SUPER local-GPU path (`docs/SETUP.md`) remains documented for reference; the active workflow is on AWS (`docs/SETUP_AWS.md`).
-
-Budget envelope: **$50-100**. Realistic AWS expectation: ~$16 compute + ~$5 storage = **~$20** across the three diseases. See `docs/SETUP_AWS.md` for the full procedure.
-
-## Timeline (10–14 days, focused)
-
-| Day | Milestone | Status |
-|---|---|---|
-| 1–2 | WSL2 + Docker + NVIDIA Container Toolkit; NGC login; BioNeMo 2.7.1 pull; Geneformer 10M smoke test on RTX 4070 SUPER (local validation path) | ✅ done 2026-05-13 |
-| 3 | Source DCM/UC/LUAD scRNA-seq from CELLxGENE Census; data download script | ✅ done 2026-05-16 |
-| 3.5 | **Pivot local-GPU → AWS** (loss of local GPU access). Submit G quota request, document the AWS procedure (`docs/SETUP_AWS.md`) | 🔁 in progress 2026-05-18 |
-| 4 | Launch `g5.xlarge` in `eu-west-3`, replay BioNeMo container + smoke test on AWS, re-download CELLxGENE datasets | |
-| 5 | Parameterized data prep pipeline (QC + Geneformer tokenization + SCDL conversion); same code, 3 configs | |
-| 6 | Smoke fine-tuning runs on `g5.xlarge` (1 epoch, subset) to validate the training loop | |
-| 7–8 | Production fine-tuning on `g5.xlarge` (or `g5.2xlarge` if CPU-bound) — 3 disease classifiers | |
-| 9 | In silico perturbation analysis (gene embedding perturbation, candidate target ranking) | |
-| 10 | OpenTargets / DGIdb validation — enrichment of known targets in top-K vs random | |
-| 11 | Cross-disease comparison figures, classifier metrics table, baseline LogReg/MLP comparison | |
-| 12–13 | Blog post draft (LinkedIn + Medium) — narrative: "Geneformer fine-tuning across 3 indications, NVIDIA stack on AWS" | |
-| 14 | Polish, publish, link from LinkedIn / CV / cover letter | |
-
-## Decisions locked
-
-| Question | Choice | Date |
-|---|---|---|
-| Biological problem | **A — Target ID via in silico perturbation** (Geneformer flagship use case) | 2026-05-12 |
-| Diseases | **DCM + UC + LUAD** (cardio + immuno + onco) — pipeline-first, three configs | 2026-05-13 |
-| Task | Disease-vs-healthy binary classification + gene-embedding perturbation ranking | 2026-05-13 |
-| BioNeMo install | **NGC container** `nvcr.io/nvidia/clara/bionemo-framework:2.7.1` (pinned) | 2026-05-12 |
-| GPU rental | **AWS EC2 `g6.xlarge` in `eu-west-3` (Paris)** — 1× NVIDIA L4 24 GB Ada Lovelace, ~$0.805/h. Pivoted from Lambda Labs A100 after loss of local GPU access; landed on `g6` (not `g5`) because `g5` is not offered in Paris — turned out cheaper and a newer architecture. | 2026-05-18 |
-| Blog target | **LinkedIn primary + Medium cross-post** | 2026-05-12 |
-
-## Success criteria
-
-- Repo is public, well-documented, reproducible from scratch (one pipeline, three configs, three result sets)
-- Blog post is published before the NVIDIA application is submitted
-- Application cover letter and LinkedIn explicitly reference the project
-- Fine-tuned Geneformer beats a non-foundation baseline (LogReg / MLP on HVG) on at least 2 of the 3 indications
-- In silico perturbation recovers a non-trivial fraction of OpenTargets known drug targets in the top-K predictions, on at least DCM (the paper-anchored baseline)
-- Bonus: a recruiter or hiring manager comments on the blog post
-
-## Fallback plan
-
-If BioNeMo setup or Geneformer fine-tuning hits a wall after 3–4 days, pivot to **ESM-2 fine-tuning for a protein function task** (HuggingFace + PyTorch, plenty of tutorials, lighter compute). Worse positioning but ships reliably. Better to ship a smaller project than fail to ship the ambitious one.
-
-## Links and references
-
-- BioNeMo Framework: https://docs.nvidia.com/bionemo-framework/
-- Geneformer paper: Theodoris et al., Nature 2023
-- CELLxGENE Discover: https://cellxgene.cziscience.com/
-- NVIDIA Launchpad (free GPU trial): https://www.nvidia.com/en-us/launchpad/
-- Triton Inference Server: https://docs.nvidia.com/deeplearning/triton-inference-server/
-
-## Job posting reference
-
-NVIDIA — Solutions Architect, AI for Drug Discovery (EMEA) — JR2017335
+Code under Apache 2.0. Data subject to the licences of the original CELLxGENE depositions (see each dataset on <https://cellxgene.cziscience.com/>).
