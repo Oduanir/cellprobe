@@ -166,8 +166,8 @@ ssh gpu "docker run ..."
 
 ```ssh
 Host gpu
-    HostName 100.126.238.115     # Tailscale IP of the WSL2 host
-    User oduanir
+    HostName <your-tailscale-ip>     # Tailscale CGNAT IP of the WSL2 host (100.64.0.0/10)
+    User <your-wsl2-username>
     IdentityFile ~/.ssh/id_ed25519
 ```
 
