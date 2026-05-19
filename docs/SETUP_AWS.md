@@ -1,6 +1,6 @@
 # SETUP — AWS EC2 procedure
 
-Reproducible environment for fine-tuning Geneformer with NVIDIA BioNeMo on AWS. This is the path a NVIDIA Solutions Architect would recommend to an EMEA biopharma customer: containerized BioNeMo on an Ampere-generation EC2 instance, data-resident in `eu-west-3` (Paris), pay-per-second compute.
+Reproducible environment for running CellProbe on AWS: containerised BioNeMo on an Ada-Lovelace-generation EC2 instance, EMEA-resident in `eu-west-3` (Paris), pay-per-second compute.
 
 For the original local-GPU procedure (RTX 4070 SUPER on WSL2), see [`SETUP.md`](SETUP.md).
 

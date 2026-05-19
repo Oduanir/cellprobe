@@ -1,6 +1,6 @@
 # SETUP — Day 1-2 procedure
 
-Reproducible environment for fine-tuning Geneformer with NVIDIA BioNeMo. This is the path a NVIDIA Solutions Architect would recommend to a biopharma customer: containerized BioNeMo running on a local consumer GPU for development, scaling out to A100 for production.
+Alternative bring-up procedure for CellProbe on a local consumer GPU, kept as a reference. The active workflow is [`SETUP_AWS.md`](SETUP_AWS.md). This local path runs the BioNeMo container on a Windows + WSL2 host with an RTX 4070 SUPER for development and validation; production-scale fine-tuning would still need a cloud A100 / H100.
 
 ## Hardware target
 

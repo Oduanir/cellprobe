@@ -1,12 +1,15 @@
-# CellProbe
+# CellProbe — drug-target identification across three indications, on NVIDIA BioNeMo
 
-**Drug-target identification across three indications using NVIDIA BioNeMo's Geneformer foundation model.**
+> **NVIDIA BioNeMo 2.7.1** · **Geneformer 10M** · **NVIDIA L4 (AWS `g6.xlarge`, `eu-west-3`)** · **CELLxGENE Census** · **OpenTargets**
 
 ![Top-10 perturbation candidates per disease](results/figures/fig2_top10_targets.png)
 
-For each of three drug-discovery indications — **ulcerative colitis**, **dilated cardiomyopathy**, **lung adenocarcinoma** — this project shows how a frozen, pretrained Geneformer encoder can (1) classify disease vs. healthy single cells with >95 % accuracy and (2) prioritise candidate therapeutic targets via in-silico gene knockout, recovering known drug targets in the top-10 across all three diseases.
+For three drug-discovery indications — **ulcerative colitis**, **dilated cardiomyopathy**, **lung adenocarcinoma** — CellProbe applies a frozen **Geneformer 10M** foundation model from **NVIDIA BioNeMo** to:
 
-The pipeline runs end-to-end on a single AWS EC2 instance with one NVIDIA L4 GPU, costs about **\$20** of compute, and is reproducible from a single shell command per stage.
+- classify disease vs. healthy single cells (test AUC 0.97 – 1.00 across the three indications), and
+- rank candidate therapeutic targets via in-silico gene knockout, validated against the OpenTargets disease–target catalogue.
+
+End-to-end pipeline on a single AWS EC2 instance with one NVIDIA L4 GPU, EMEA-resident in `eu-west-3` (Paris). Total compute: **~$20**. Single shell command per stage to reproduce.
 
 ## Headline numbers
 
@@ -77,9 +80,9 @@ RESULTS.md                     # headline numbers and per-disease tables
 - **scikit-learn** — MLP probe + cross-validation
 - **matplotlib / seaborn** — figures
 
-## Context
+## Design notes
 
-This project was built as the technical artefact backing an application for **NVIDIA — Solutions Architect, AI for Drug Discovery (EMEA)** (JR2017335). The full design rationale, alternatives considered, and engineering trade-offs are captured in [`docs/PROJECT_HISTORY.md`](docs/PROJECT_HISTORY.md).
+The full design rationale, alternatives considered, and engineering trade-offs (methodology pivot from end-to-end fine-tuning to NVIDIA's official frozen-probe benchmark; cloud cost discipline; OpenTargets candidate-selection choice) are documented in [`docs/PROJECT_HISTORY.md`](docs/PROJECT_HISTORY.md).
 
 ## References
 
