@@ -19,7 +19,7 @@ set -euo pipefail
 
 BIONEMO_IMAGE="${BIONEMO_IMAGE:-nvcr.io/nvidia/clara/bionemo-framework:2.7.1}"
 CACHE_DIR="${BIONEMO_CACHE:-$HOME/bionemo-cache}"
-WORKSPACE="${RTX_CODE_DIR:-$HOME/bionemo-workspace/rtx-code}"
+WORKSPACE="${CELLPROBE_DIR:-$HOME/bionemo-workspace/cellprobe}"
 MICRO_BATCH_SIZE="${MICRO_BATCH_SIZE:-16}"
 
 PROBE_ONLY=0
@@ -38,8 +38,8 @@ docker_run() {
   docker run --rm --gpus all \
     --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
     -v "$CACHE_DIR:/cache" \
-    -v "$WORKSPACE:/workspace/rtx-code" \
-    -w /workspace/rtx-code \
+    -v "$WORKSPACE:/workspace/cellprobe" \
+    -w /workspace/cellprobe \
     --user "$(id -u):$(id -g)" \
     -e HOME=/tmp -e BIONEMO_CACHE=/cache -e PYTHONUNBUFFERED=1 \
     "$BIONEMO_IMAGE" "$@"

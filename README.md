@@ -1,4 +1,4 @@
-# RTX-CODE
+# CellProbe
 
 **Drug-target identification across three indications using NVIDIA BioNeMo's Geneformer foundation model.**
 

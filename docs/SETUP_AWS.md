@@ -7,7 +7,7 @@ For the original local-GPU procedure (RTX 4070 SUPER on WSL2), see [`SETUP.md`](
 ## Why this stack
 
 - **Region `eu-west-3` (Paris)** — EMEA data residency. The data we use here is public (CELLxGENE), but a real pharma customer needs EU residency for any patient-derived omics. Defending region choice is part of the SA pitch.
-- **Instance `g6.xlarge`** — 1× NVIDIA L4 (24 GB VRAM, Ada Lovelace), 4 vCPU, 16 GB RAM, ~$0.805/h on-demand. **Note**: `g6.xlarge` (A10G) is **not offered in `eu-west-3` as of 2026-05** — only `g4dn` (T4, Turing) and `g6` (L4, Ada Lovelace) are. L4 is the newer of the two, cheaper than A10G would have been, and ships fast FP8/INT8 tensor cores — strictly an upgrade. Step up to `g6.2xlarge` (same GPU, more RAM/CPU) only if data loading bottlenecks. Check availability in your region with `aws ec2 describe-instance-type-offerings --location-type availability-zone --filters Name=instance-type,Values=g6.xlarge,g6.xlarge,g4dn.xlarge`.
+- **Instance `g6.xlarge`** — 1× NVIDIA L4 (24 GB VRAM, Ada Lovelace), 4 vCPU, 16 GB RAM, ~$0.805/h on-demand. **Note**: `g5.xlarge` (NVIDIA A10G, Ampere) is **not offered in `eu-west-3` as of 2026-05** — only `g4dn` (T4, Turing) and `g6` (L4, Ada Lovelace) are. L4 is the newer of the two, cheaper than A10G would have been on g5, and ships fast FP8/INT8 tensor cores — strictly an upgrade. Step up to `g6.2xlarge` (same GPU, more RAM/CPU) only if data loading bottlenecks. Check availability in your region with `aws ec2 describe-instance-type-offerings --location-type availability-zone --filters Name=instance-type,Values=g5.xlarge,g6.xlarge,g4dn.xlarge`.
 - **AMI: Deep Learning OSS Nvidia Driver AMI GPU PyTorch — Ubuntu 22.04** — AWS-maintained AMI with the NVIDIA driver, CUDA, Docker, and the NVIDIA Container Toolkit pre-installed. Saves a full day of setup vs a vanilla Ubuntu AMI.
 - **Storage `gp3` 100 GB** — BioNeMo container (~55 GB) + cache (~10 GB) + datasets (~5 GB) + working room. gp3 is the default modern EBS volume, 3000 IOPS / 125 MB/s baseline, plenty for our I/O.
 - **Stop-when-idle billing** — `stop` (not `terminate`) the instance between sessions. Compute billing pauses; EBS storage continues at ~$8/month for 100 GB. Cheaper than keeping the instance running.
@@ -43,11 +43,11 @@ Track the request in the AWS console → **Service Quotas → EC2 → Running On
 ```bash
 # Generate a dedicated key for this project (keep it local; never commit)
 aws ec2 create-key-pair \
-  --key-name rtx-code-key \
+  --key-name cellprobe-key \
   --key-type ed25519 \
   --query 'KeyMaterial' \
-  --output text > ~/.ssh/rtx-code-key.pem
-chmod 600 ~/.ssh/rtx-code-key.pem
+  --output text > ~/.ssh/cellprobe-key.pem
+chmod 600 ~/.ssh/cellprobe-key.pem
 ```
 
 ### 2.2 Security group (SSH from your IP only)
@@ -57,11 +57,11 @@ chmod 600 ~/.ssh/rtx-code-key.pem
 MYIP=$(curl -s https://checkip.amazonaws.com)/32
 
 aws ec2 create-security-group \
-  --group-name rtx-code-sg \
-  --description "SSH to rtx-code dev instance"
+  --group-name cellprobe-sg \
+  --description "SSH to cellprobe dev instance"
 
 aws ec2 authorize-security-group-ingress \
-  --group-name rtx-code-sg \
+  --group-name cellprobe-sg \
   --protocol tcp --port 22 --cidr "$MYIP"
 ```
 
@@ -86,10 +86,10 @@ Note the `ami-xxxxxxxx` ID returned.
 aws ec2 run-instances \
   --image-id ami-XXXXXXXXXXXX \
   --instance-type g6.xlarge \
-  --key-name rtx-code-key \
-  --security-groups rtx-code-sg \
+  --key-name cellprobe-key \
+  --security-groups cellprobe-sg \
   --block-device-mappings 'DeviceName=/dev/sda1,Ebs={VolumeSize=100,VolumeType=gp3,DeleteOnTermination=true}' \
-  --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=rtx-code-dev},{Key=Project,Value=rtx-code}]' \
+  --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=cellprobe-dev},{Key=Project,Value=cellprobe}]' \
   --query 'Instances[0].InstanceId' \
   --output text
 ```
@@ -106,7 +106,7 @@ aws ec2 describe-instances --instance-ids $INSTANCE_ID \
 ### 2.5 SSH
 
 ```bash
-ssh -i ~/.ssh/rtx-code-key.pem ubuntu@<public-dns-from-above>
+ssh -i ~/.ssh/cellprobe-key.pem ubuntu@<public-dns-from-above>
 ```
 
 Add this to `~/.ssh/config` for convenience:
@@ -115,7 +115,7 @@ Add this to `~/.ssh/config` for convenience:
 Host aws-rtx
     HostName <public-dns>
     User ubuntu
-    IdentityFile ~/.ssh/rtx-code-key.pem
+    IdentityFile ~/.ssh/cellprobe-key.pem
 ```
 
 Then just `ssh aws-rtx`.
@@ -164,10 +164,10 @@ The pull is ~55 GB and runs at full ENI bandwidth on g6 (≈10 Gbps) — typical
 
 ```bash
 # On the EC2 instance
-git clone https://github.com/<your-username>/rtx-code.git ~/rtx-code
+git clone https://github.com/<your-username>/cellprobe.git ~/cellprobe
 
 mkdir -p ~/bionemo-cache ~/bionemo-workspace
-ln -sf ~/rtx-code ~/bionemo-workspace/rtx-code
+ln -sf ~/cellprobe ~/bionemo-workspace/cellprobe
 ```
 
 The cache directory persists across container runs (and across instance stop/start, because it sits on the EBS root volume, not container ephemeral storage).
@@ -181,8 +181,8 @@ The datasets we already pulled on the local PC are not accessible from the EC2 i
 docker run --rm --gpus all \
   --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
   -v ~/bionemo-cache:/root/.cache/bionemo \
-  -v ~/rtx-code:/workspace/rtx-code \
-  -w /workspace/rtx-code \
+  -v ~/cellprobe:/workspace/cellprobe \
+  -w /workspace/cellprobe \
   nvcr.io/nvidia/clara/bionemo-framework:2.7.1 \
   python -u -m src.data.download --config configs/diseases.yaml --out data/
 ```
@@ -199,18 +199,18 @@ Same procedure as the local one. Pull the Geneformer 10M checkpoint and the CELL
 docker run --rm --gpus all \
   --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
   -v ~/bionemo-cache:/root/.cache/bionemo \
-  -v ~/rtx-code:/workspace/rtx-code \
+  -v ~/cellprobe:/workspace/cellprobe \
   nvcr.io/nvidia/clara/bionemo-framework:2.7.1 bash -c '
 download_bionemo_data geneformer/10M_241113:2.0 --source ngc
 download_bionemo_data single_cell/testdata-20240506 --source ngc
 
 CKPT_DIR=$(find /root/.cache/bionemo -type d -path "*geneformer_10M*.untar" | head -1)
 DATA_DIR=$(find /root/.cache/bionemo -type d -path "*scdl/test" | head -1)
-mkdir -p /workspace/rtx-code/results/smoke-test
-python /workspace/rtx-code/scripts/infer_wrapper.py \
+mkdir -p /workspace/cellprobe/results/smoke-test
+python /workspace/cellprobe/scripts/infer_wrapper.py \
   --data-dir $DATA_DIR \
   --checkpoint-path $CKPT_DIR \
-  --results-path /workspace/rtx-code/results/smoke-test \
+  --results-path /workspace/cellprobe/results/smoke-test \
   --precision bf16-mixed \
   --include-hiddens \
   --micro-batch-size 4 \
@@ -237,9 +237,9 @@ aws ec2 wait instance-running --instance-ids $INSTANCE_ID
 
 # Definitive cleanup at end-of-project (deletes the EBS volume — back up `data/` and `results/` first)
 aws ec2 terminate-instances --instance-ids $INSTANCE_ID
-aws ec2 delete-security-group --group-name rtx-code-sg
-aws ec2 delete-key-pair --key-name rtx-code-key
-rm ~/.ssh/rtx-code-key.pem
+aws ec2 delete-security-group --group-name cellprobe-sg
+aws ec2 delete-key-pair --key-name cellprobe-key
+rm ~/.ssh/cellprobe-key.pem
 ```
 
 Estimated total project cost (Paris, on-demand):
@@ -258,8 +258,8 @@ Well within the $50–100 envelope.
 Two-step pipeline, both wrapped in `scripts/run_data_pipeline.sh`:
 
 ```bash
-# On the EC2 instance, with the repo synced to ~/bionemo-workspace/rtx-code
-cd ~/bionemo-workspace/rtx-code
+# On the EC2 instance, with the repo synced to ~/bionemo-workspace/cellprobe
+cd ~/bionemo-workspace/cellprobe
 ./scripts/run_data_pipeline.sh           # all 3 diseases
 ./scripts/run_data_pipeline.sh --only dcm  # one disease only
 ./scripts/run_data_pipeline.sh --force   # overwrite existing outputs

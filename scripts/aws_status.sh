@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# Real-time status + cost estimate for all AWS resources tagged Project=rtx-code
+# Real-time status + cost estimate for all AWS resources tagged Project=cellprobe
 # in eu-west-3 (Paris).
 #
 # AWS billing has a 6-24h delay on the console; this script computes the
-# rtx-code subset live by multiplying current uptime by the listed on-demand
+# cellprobe subset live by multiplying current uptime by the listed on-demand
 # rates. It is an *estimate* (does not include data egress, snapshots, etc.)
 # but covers > 95% of what this project will spend.
 #
@@ -22,7 +22,7 @@ set -euo pipefail
 
 PROFILE="${AWS_PROFILE:-admin}"
 REGION="${AWS_REGION:-eu-west-3}"
-PROJECT_TAG="${PROJECT_TAG:-rtx-code}"
+PROJECT_TAG="${PROJECT_TAG:-cellprobe}"
 
 # eu-west-3 on-demand rates (USD/h). Update if AWS rates change.
 # Using a function instead of an associative array for bash 3.2 compatibility (macOS default).
@@ -109,7 +109,7 @@ else
 fi
 echo
 
-bold "=== Estimated rtx-code cost so far ==="
+bold "=== Estimated cellprobe cost so far ==="
 TOTAL=$(echo "scale=2; $TOTAL_COMPUTE_COST + $TOTAL_EBS_COST" | bc)
 printf '  Compute (current session):    $%.3f\n' "$TOTAL_COMPUTE_COST"
 printf '  EBS storage (since creation): $%.3f\n' "$TOTAL_EBS_COST"

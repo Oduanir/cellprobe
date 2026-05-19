@@ -145,8 +145,8 @@ The positive but sub-unity correlations are the central message: **Geneformer's 
 # On a g6.xlarge in eu-west-3 with the data pipeline + probe pipeline already done
 docker run --rm --gpus all \
   --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
-  -v ~/bionemo-cache:/cache -v ~/bionemo-workspace/rtx-code:/workspace/rtx-code \
-  -w /workspace/rtx-code --user $(id -u):$(id -g) -e HOME=/tmp -e BIONEMO_CACHE=/cache \
+  -v ~/bionemo-cache:/cache -v ~/bionemo-workspace/cellprobe:/workspace/cellprobe \
+  -w /workspace/cellprobe --user $(id -u):$(id -g) -e HOME=/tmp -e BIONEMO_CACHE=/cache \
   nvcr.io/nvidia/clara/bionemo-framework:2.7.1 \
   python -u -m src.perturb.perturb \
     --disease uc --n-cells 200 --top-tokens 100 --max-genes 50 \

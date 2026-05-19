@@ -14,7 +14,7 @@
 
 ---
 
-# RTX-CODE — Fine-tuning Geneformer with NVIDIA BioNeMo (original plan)
+# CellProbe — Fine-tuning Geneformer with NVIDIA BioNeMo (original plan)
 
 ## Context
 

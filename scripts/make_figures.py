@@ -1,4 +1,4 @@
-"""Generate the comparative figures for the RTX-CODE project.
+"""Generate the comparative figures for the CellProbe project.
 
 Reads from `results/` (committed JSONs) and writes PNG + PDF to
 `results/figures/`. Pure matplotlib + seaborn — no GPU or BioNeMo needed.

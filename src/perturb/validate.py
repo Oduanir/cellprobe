@@ -31,7 +31,7 @@ from typing import Any
 import yaml
 
 OT_GRAPHQL_URL = "https://api.platform.opentargets.org/api/v4/graphql"
-USER_AGENT = "rtx-code/0.1 (https://github.com/.../rtx-code)"
+USER_AGENT = "cellprobe/0.1 (https://github.com/.../cellprobe)"
 
 QUERY = """
 query DiseaseTargets($efoId: String!, $size: Int!) {
