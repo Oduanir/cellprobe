@@ -40,6 +40,9 @@ results/**
 !results/uc/perturbation/
 !results/dcm/perturbation/
 !results/luad/perturbation/
+!results/figures/
+!results/figures/*.png
+!results/figures/*.pdf
 *.pt
 *.ckpt
 *.nemo
